@@ -35,8 +35,6 @@ class Agent:
         """
         hàm dùng để huấn luyện agent 
         """
-
-
         pass 
 
 

@@ -5,6 +5,7 @@ Các folder được sắp xếp theo thứ tự như sau:
 
 ```
 MAgent2 RL Final Project
+├── utils               # chứa các file bổ sung, bổ trợ cho từng thuật toán 
 ├── agent               # cấu trúc lại agent 
 │   └── base_agent.py
 ├── assets              # lưu ảnh 

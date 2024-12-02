@@ -19,15 +19,12 @@ class Inference:
         Run môi trường + save thành video 
     """
 
-
     def __init__(self, env_name: str,  save_dir: str):
         self.env = battle_v4.env(map_size=45, render_mode="rgb_array")
         self.save_dir = 'video'
         os.makedirs(self.save_dir, exist_ok=True)
         self.fps = 35
-        self.frames = []
 
-    
 
     def play(self, red_agent: Agent, blue_agent: Agent):
         """
@@ -42,6 +39,7 @@ class Inference:
         
         """
         self.env.reset()
+        self.frames = []
 
         for agent in self.env.agent_iter():
             observation, reward, termination, truncation, info = self.env.last()
@@ -80,14 +78,6 @@ class Inference:
             out.write(frame_bgr)
         out.release()
         print("Xong r m oi :>>>> ")
-
-
-
-
-
-
-
-
 
 
 
