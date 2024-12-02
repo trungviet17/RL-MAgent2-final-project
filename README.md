@@ -1,4 +1,31 @@
 # MAgent2 RL Final Project
+
+## Project Structure 
+Các folder được sắp xếp theo thứ tự như sau: 
+
+```
+MAgent2 RL Final Project
+├── agent               # cấu trúc lại agent 
+│   └── base_agent.py
+├── assets              # lưu ảnh 
+│   ├── random.gif
+│   └── pretrained.gif
+├── configs             # lưu các file .yaml là config của model (nếu có) 
+├── main.py            # file này dùng để chạy infer 
+├── model                      # cài đặt các torch network 
+│   ├── pretrained_model.py 
+│   └── state_dict           # save checkpoint 
+│       └── red.pt
+├── README.md 
+├── requirements.txt
+├── train.py               # file này dùng để huấn luyện model 
+└── video                  # lưu video game play 
+```
+
+
+
+
+
 ## Overview
 In this final project, you will develop and train a reinforcement learning (RL) agent using the MAgent2 platform. The task is to solve a specified MAgent2 environment `battle`, and your trained agent will be evaluated on all following three types of opponents:
 
