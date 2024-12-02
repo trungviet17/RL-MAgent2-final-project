@@ -4,21 +4,39 @@ from model.pretrained_model import QNetwork
 
 
 """
-File này dùng để khởi tạo agent trong huấn luyện 
+File này dùng để khởi tạo agent trong huấn luyện và infer  
 """
 
 
 class Agent: 
+    """
+    Class abstract cho tất cả agent 
+    
+    """
+
 
     def __init__(self, n_actions): 
         self.n_action = n_actions
         pass 
 
     def get_action(self, observation): 
+        """
+        Hàm dùng để thực hiện action theo agent 
+        Input: 
+            observation : np.array - mảng ảnh của môi trường
+        Output:
+            action : int - hành động được chọn
+        """
+
         pass 
 
 
     def learn(self): 
+        """
+        hàm dùng để huấn luyện agent 
+        """
+
+
         pass 
 
 

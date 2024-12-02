@@ -30,6 +30,17 @@ class Inference:
     
 
     def play(self, red_agent: Agent, blue_agent: Agent):
+        """
+        Hàm nhận thực hiện một game với 2 agent cho trước 
+
+        Input: 
+            red_agent : Agent - agent đỏ 
+            blue_agent : Agent - agent xanh
+
+        Output:
+            Lưu vào frame 
+        
+        """
         self.env.reset()
 
         for agent in self.env.agent_iter():
@@ -52,6 +63,9 @@ class Inference:
         self.env.close()
 
     def draw_video(self, names: str):
+        """
+        Vẽ video từ frame 
+        """
 
         height, width, _ = self.frames[0].shape
         out = cv2.VideoWriter(
@@ -65,7 +79,7 @@ class Inference:
             frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             out.write(frame_bgr)
         out.release()
-        print("Done recording random agents")
+        print("Xong r m oi :>>>> ")
 
 
 
