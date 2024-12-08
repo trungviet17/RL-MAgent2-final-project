@@ -13,11 +13,10 @@ class Agent:
     Class abstract cho tất cả agent 
     
     """
-
-
-    def __init__(self, n_actions): 
+    def __init__(self, n_observation , n_actions): 
         self.n_action = n_actions
-        pass 
+        self.n_observation = n_observation
+        
 
     def get_action(self, observation): 
         """
@@ -39,8 +38,8 @@ class Agent:
 
 
 class RandomAgent(Agent): 
-    def __init__(self, n_actions):
-        super().__init__(n_actions)
+    def __init__(self, n_observation,  n_actions):
+        super().__init__(n_observation , n_actions)
 
 
     def get_action(self, observation):
@@ -52,12 +51,12 @@ class RandomAgent(Agent):
 
 class PretrainedAgent(Agent): 
 
-    def __init__(self, n_observation, n_actions): 
-        super().__init__(n_actions)
+    def __init__(self, n_observation, n_actions, model_path: str): 
+        super().__init__(n_observation, n_actions)
         self.qnetwork = QNetwork(n_observation, n_actions)
 
         self.qnetwork.load_state_dict(
-            torch.load("model/state_dict/red.pt", weights_only=True, map_location="cpu")
+            torch.load(model_path, weights_only=True, map_location="cpu")
         ) 
 
     def get_action(self, observation):

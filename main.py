@@ -2,6 +2,7 @@ from magent2.environments import battle_v4
 import os
 import cv2
 from agent.base_agent import Agent, RandomAgent, PretrainedAgent
+import time
 
 """
 File code này dùng để chạy thử nghiệm các model đã được train sẵn trong ván chơi 
@@ -40,10 +41,9 @@ class Inference:
         """
         self.env.reset()
         self.frames = []
-
+        str_time = time.time()
         for agent in self.env.agent_iter():
             observation, reward, termination, truncation, info = self.env.last()
-
             if termination or truncation:
                 action = None
             else:
@@ -57,7 +57,8 @@ class Inference:
 
             if agent == 'red_0':
                 self.frames.append(self.env.render())
-                
+            
+        print(f"Time: {time.time() - str_time}")    
         self.env.close()
 
     def draw_video(self, names: str):
@@ -87,11 +88,11 @@ if __name__ == "__main__":
     n_actions = infer.env.action_space("red_0").n
     n_observation = infer.env.observation_space("red_0").shape
 
-    agent1 = PretrainedAgent(n_observation,  n_actions)
-    agent2 = RandomAgent(n_actions)
+    agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/q_net_trained.pt')
+    agent2 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/q_net_trained.pt')
 
     infer.play(agent1, agent2)
-    infer.draw_video('pretrained_vs_random')
+    infer.draw_video('myq_vs_myq')
 
 
 
