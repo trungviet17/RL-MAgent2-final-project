@@ -1,5 +1,5 @@
 import torch 
-from model.pretrained_model import QNetwork 
+from model.networks import Pretrained_QNets
 
 
 
@@ -26,11 +26,10 @@ class Agent:
         Output:
             action : int - hành động được chọn
         """
-
         pass 
 
 
-    def learn(self): 
+    def train(self): 
         """
         hàm dùng để huấn luyện agent 
         """
@@ -53,7 +52,7 @@ class PretrainedAgent(Agent):
 
     def __init__(self, n_observation, n_actions, model_path: str): 
         super().__init__(n_observation, n_actions)
-        self.qnetwork = QNetwork(n_observation, n_actions)
+        self.qnetwork = Pretrained_QNets(n_observation, n_actions)
 
         self.qnetwork.load_state_dict(
             torch.load(model_path, weights_only=True, map_location="cpu")

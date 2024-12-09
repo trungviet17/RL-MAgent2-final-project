@@ -6,6 +6,8 @@ import time
 
 """
 File code này dùng để chạy thử nghiệm các model đã được train sẵn trong ván chơi 
+
+#NOTE : vòng loop chi duyển qua những agent nào còn sống 
 """
 
 class Inference: 
@@ -42,6 +44,9 @@ class Inference:
         self.env.reset()
         self.frames = []
         str_time = time.time()
+        state = self.env.state()
+        
+        temp = 0 
         for agent in self.env.agent_iter():
             observation, reward, termination, truncation, info = self.env.last()
             if termination or truncation:
@@ -51,9 +56,11 @@ class Inference:
                 if agent_handle == "red":
                     action = red_agent.get_action(observation)
                 else:
-                    action = blue_agent.get_action(observation)
+                    action = None 
 
             self.env.step(action)
+            if agent.split("_")[0] == 'blue':
+                print(f"Red name:{agent}")
 
             if agent == 'red_0':
                 self.frames.append(self.env.render())
@@ -88,8 +95,8 @@ if __name__ == "__main__":
     n_actions = infer.env.action_space("red_0").n
     n_observation = infer.env.observation_space("red_0").shape
 
-    agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/q_net_trained.pt')
-    agent2 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/q_net_trained.pt')
+    agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/red.pt')
+    agent2 = RandomAgent(n_observation, n_actions)
 
     infer.play(agent1, agent2)
     infer.draw_video('myq_vs_myq')

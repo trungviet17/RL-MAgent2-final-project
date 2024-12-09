@@ -3,7 +3,7 @@ from utils.exp_replay import ExperienceReplay
 from torch.optim import Adam
 import numpy as np 
 import torch 
-from model.pretrained_model import QNetwork
+from model.networks import Pretrained_QNets
 import torch.nn as nn 
 
 class DQLAgent(Agent):
@@ -11,8 +11,8 @@ class DQLAgent(Agent):
     def __init__(self, n_observation, n_actions, buffer_size, batch_size, gamma, lr, target_update_freq):
         super().__init__(n_observation, n_actions)
 
-        self.qnetwork = QNetwork(n_observation, n_actions)
-        self.target_qnetwork = QNetwork(n_observation, n_actions)
+        self.qnetwork = Pretrained_QNets(n_observation, n_actions)
+        self.target_qnetwork = Pretrained_QNets(n_observation, n_actions)
         self.target_qnetwork.load_state_dict(self.qnetwork.state_dict())
         self.target_qnetwork.eval()
 
