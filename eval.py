@@ -29,13 +29,13 @@ def eval():
     )
     q_network.to(device)
 
-    # final_q_network = Final_QNets(
-    #     env.observation_space("red_0").shape, env.action_space("red_0").n
-    # )
-    # final_q_network.load_state_dict(
-    #     torch.load("model/state_dict/red_final.pt", weights_only=True, map_location="cpu")
-    # )
-    # final_q_network.to(device)
+    final_q_network = Final_QNets(
+        env.observation_space("red_0").shape, env.action_space("red_0").n
+    )
+    final_q_network.load_state_dict(
+        torch.load("model/state_dict/red_final.pt", weights_only=True, map_location="cpu")
+    )
+    final_q_network.to(device)
 
     def my_policy(env, agent, obs):
         my_agent = PretrainedAgent(env.observation_space("red_0").shape,  env.action_space("red_0").n, model_path= 'model/state_dict/model2.pt')
@@ -51,13 +51,13 @@ def eval():
             q_values = q_network(observation)
         return torch.argmax(q_values, dim=1).cpu().numpy()[0]
 
-    # def final_pretrain_policy(env, agent, obs):
-    #     observation = (
-    #         torch.Tensor(obs).float().permute([2, 0, 1]).unsqueeze(0).to(device)
-    #     )
-    #     with torch.no_grad():
-    #         q_values = final_q_network(observation)
-    #     return torch.argmax(q_values, dim=1).cpu().numpy()[0]
+    def final_pretrain_policy(env, agent, obs):
+        observation = (
+            torch.Tensor(obs).float().permute([2, 0, 1]).unsqueeze(0).to(device)
+        )
+        with torch.no_grad():
+            q_values = final_q_network(observation)
+        return torch.argmax(q_values, dim=1).cpu().numpy()[0]
 
     def run_eval(env, red_policy, blue_policy, n_episode: int = 100):
         red_win, blue_win = [], []
@@ -106,29 +106,29 @@ def eval():
             "average_rewards_blue": np.mean(blue_tot_rw),
         }
 
-    print("=" * 20)
-    print("Eval with random policy")
-    print(
-        run_eval(
-            env=env, red_policy=my_policy, blue_policy=random_policy, n_episode=30
-        )
-    )
-    print("=" * 20)
+    # print("=" * 20)
+    # print("Eval with random policy")
+    # print(
+    #     run_eval(
+    #         env=env, red_policy=my_policy, blue_policy=random_policy, n_episode=30
+    #     )
+    # )
+    # print("=" * 20)
 
-    print("Eval with trained policy")
-    print(
-        run_eval(
-            env=env, red_policy=my_policy, blue_policy=pretrain_policy, n_episode=30
-        )
-    )
+    # print("Eval with trained policy")
+    # print(
+    #     run_eval(
+    #         env=env, red_policy=my_policy, blue_policy=pretrain_policy, n_episode=30
+    #     )
+    # )
     print("=" * 20)
 
     print("Eval with final trained policy")
     print(
         run_eval(
             env=env,
-            red_policy=final_pretrain_policy,
-            blue_policy=random_policy,
+            red_policy=my_policy,
+            blue_policy=final_pretrain_policy,
             n_episode=30,
         )
     )

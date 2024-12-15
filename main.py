@@ -1,7 +1,7 @@
 from magent2.environments import battle_v4
 import os
 import cv2
-from agent.base_agent import Agent, RandomAgent, PretrainedAgent
+from agent.base_agent import Agent, RandomAgent, PretrainedAgent, Final_Agent
 import time
 
 """
@@ -97,10 +97,11 @@ if __name__ == "__main__":
 
     agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/model2.pt')
     # agent2 = RandomAgent(n_observation, n_actions)
-    agent2 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/red.pt')
+    # agent2 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/red.pt')
+    agent2 = Final_Agent(n_observation,  n_actions, model_path= 'model/state_dict/red_final.pt')
 
     infer.play(agent1, agent2)
-    infer.draw_video('myq_vs_pretrained')
+    infer.draw_video('myq_vs_final')
 
 
 
