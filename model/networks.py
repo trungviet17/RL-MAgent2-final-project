@@ -80,7 +80,7 @@ class GRU_QNets(nn.Module):
         1. n_observation : tuple - kích thước của ảnh đầu vào
         2. n_actions : so luong hanh dong thuc hien 
     Output: 
-        1. Hàm Q của 1 agent 
+        1. Giá trị Q cho tất các action với n_observation được quan sát. 
     """
     def __init__(self, n_observation, n_actions, hidden_dim: int = 120):
         super(GRU_QNets, self).__init__()
@@ -119,11 +119,11 @@ class QMix_Nets(nn.Module):
     """"
     Mạng QMix học hàm Q-total -> với thông tin của state và các q-value của hàm trước đó.  
     Input: 
-        1. state_shape : int - kích thước của state
-        2. n_actions : int - số lượng hành động
-
-
-
+        1. Thông tin về state -> state_dim : kích thước state  
+        2. Số lượng agent và hàm q max của agent đó  -> n_actions + số lượng agent 
+    => setting 2 tham số tương ứng với 2 đầu vào  
+    Output: 
+        1. Giá trị Q-total 
     """
 
     def __init__(self, state_shape, n_actions, num_agent,  embed_dim = 32, hyper_embed_dim = 128): 
@@ -133,7 +133,8 @@ class QMix_Nets(nn.Module):
         self.n_actions = n_actions
         self.embed_dim = embed_dim
         self.hyper_embed_dim = hyper_embed_dim
-
+        
+        # hyperparameter nhận đầu vào là kết quả từ từng GRU_QNets [num_agent, n_actions]
         self.hyper_w1 = nn.Sequential(
             nn.Linear(state_shape, hyper_embed_dim),
             nn.ReLU(),
@@ -160,7 +161,14 @@ class QMix_Nets(nn.Module):
 
     def forward(self, agent_qs, state) :
         """
-        Nhận đầu vào là một chuỗi 
+        Nhận đầu vào là một ma trận 
+        
+        Input: 
+
+
+        Output: 
+
+
         
         """
         batch_size = state.size(0)
@@ -176,4 +184,36 @@ class QMix_Nets(nn.Module):
 
         q_total = torch.bmm(hidden, w2) + b2
         return q_total.squeeze(-1)
+    
+
+class Final_QNets(nn.Module):
+    def __init__(self, observation_shape, action_shape):
+        super().__init__()
+        self.cnn = nn.Sequential(
+            nn.Conv2d(observation_shape[-1], observation_shape[-1], 3),
+            nn.ReLU(),
+            nn.Conv2d(observation_shape[-1], observation_shape[-1], 3),
+            nn.ReLU(),
+        )
+        dummy_input = torch.randn(observation_shape).permute(2, 0, 1)
+        dummy_output = self.cnn(dummy_input)
+        flatten_dim = dummy_output.view(-1).shape[0]
+        self.network = nn.Sequential(
+            nn.Linear(flatten_dim, 120),
+            nn.ReLU(),
+            nn.Linear(120, 84),
+            nn.ReLU(),
+            nn.Linear(84, action_shape),
+        )
+
+    def forward(self, x):
+        assert len(x.shape) >= 3, "only support magent input observation"
+        x = self.cnn(x)
+        if len(x.shape) == 3:
+            batchsize = 1
+        else:
+            batchsize = x.shape[0]
+        x = x.reshape(batchsize, -1)
+        return self.network(x)
+
 

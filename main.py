@@ -56,11 +56,11 @@ class Inference:
                 if agent_handle == "red":
                     action = red_agent.get_action(observation)
                 else:
-                    action = None 
+                    action = blue_agent.get_action(observation)
 
             self.env.step(action)
-            if agent.split("_")[0] == 'blue':
-                print(f"Red name:{agent}")
+            # if agent.split("_")[0] == 'blue':
+            #     print(f"Red name:{agent}")
 
             if agent == 'red_0':
                 self.frames.append(self.env.render())
@@ -95,11 +95,12 @@ if __name__ == "__main__":
     n_actions = infer.env.action_space("red_0").n
     n_observation = infer.env.observation_space("red_0").shape
 
-    agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/red.pt')
-    agent2 = RandomAgent(n_observation, n_actions)
+    agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/model2.pt')
+    # agent2 = RandomAgent(n_observation, n_actions)
+    agent2 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/red.pt')
 
     infer.play(agent1, agent2)
-    infer.draw_video('myq_vs_myq')
+    infer.draw_video('myq_vs_pretrained')
 
 
 
