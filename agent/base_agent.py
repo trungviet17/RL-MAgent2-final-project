@@ -60,7 +60,7 @@ class PretrainedAgent(Agent):
 
     def get_action(self, observation):
 
-        if np.random.rand() < 0.5:
+        if np.random.rand() < 0.4:
             return np.random.randint(self.n_action)
         else:
             observation = (
@@ -68,7 +68,7 @@ class PretrainedAgent(Agent):
                     )
             with torch.no_grad():
                 q_values = self.qnetwork(observation)
-            action = torch.argmax(q_values, dim=1).numpy()[0]
+                action = torch.argmax(q_values, dim=1).numpy()[0]
 
         return action
 

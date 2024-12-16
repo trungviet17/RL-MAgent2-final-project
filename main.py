@@ -2,6 +2,7 @@ from magent2.environments import battle_v4
 import os
 import cv2
 from agent.base_agent import Agent, RandomAgent, PretrainedAgent, Final_Agent
+from agent.DQL_agent import MyQAgent
 import time
 
 """
@@ -44,12 +45,22 @@ class Inference:
         self.env.reset()
         self.frames = []
         str_time = time.time()
-        state = self.env.state()
-        
+        # state = self.env.state()
+        name = ['blue_' + str(i) for i in range(81)]
+        break_bool = True 
+
+        blue_nums = 0 
+        red_nums = 0 
+
+
         temp = 0 
         for agent in self.env.agent_iter():
             observation, reward, termination, truncation, info = self.env.last()
             if termination or truncation:
+                if "red" in agent:
+                    red_nums += 1
+                else: 
+                    blue_nums += 1
                 action = None
             else:
                 agent_handle = agent.split("_")[0]
@@ -62,10 +73,15 @@ class Inference:
             # if agent.split("_")[0] == 'blue':
             #     print(f"Red name:{agent}")
 
-            if agent == 'red_0':
+
+            if "red" in agent: break_bool = True
+
+            if agent in name and break_bool: 
                 self.frames.append(self.env.render())
+                break_bool = False
             
-        print(f"Time: {time.time() - str_time}")    
+        print(f"Time: {time.time() - str_time}, Winner: {red_nums < blue_nums}") 
+           
         self.env.close()
 
     def draw_video(self, names: str):
@@ -95,13 +111,15 @@ if __name__ == "__main__":
     n_actions = infer.env.action_space("red_0").n
     n_observation = infer.env.observation_space("red_0").shape
 
-    agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/model2.pt')
+    # agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/model3.pt')
+    agent1 = MyQAgent(n_observation,  n_actions, model_path= 'model/state_dict/my_model5.pt')
     # agent2 = RandomAgent(n_observation, n_actions)
-    # agent2 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/red.pt')
-    agent2 = Final_Agent(n_observation,  n_actions, model_path= 'model/state_dict/red_final.pt')
+    agent2 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/red.pt')
+    # agent1 = Final_Agent(n_observation,  n_actions, model_path= 'model/state_dict/red_final.pt')
+    # agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/model2.pt')
 
     infer.play(agent1, agent2)
-    infer.draw_video('myq_vs_final')
+    infer.draw_video('myq2_vs_pretrained')
 
 
 

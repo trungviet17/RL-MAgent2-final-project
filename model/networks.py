@@ -219,5 +219,61 @@ class Final_QNets(nn.Module):
         x = self.network(x)
         self.last_latent = x
         return self.last_layer(x)
+    
+
+class MyQNetwork(nn.Module):
+    def __init__(self, observation_shape, action_shape):
+        super().__init__()
+
+        # CNN Feature Extractor with Fewer Parameters
+        self.cnn = nn.Sequential(
+            nn.Conv2d(observation_shape[-1], 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+            
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2),
+        )
+
+        # Adaptive Pooling for fixed-size output
+        self.adaptive_pool = nn.AdaptiveAvgPool2d((4, 4))
+
+        # Calculate the flattened dimension
+        dummy_input = torch.randn(observation_shape).permute(2, 0, 1).unsqueeze(0)
+        dummy_output = self.adaptive_pool(self.cnn(dummy_input))
+        flatten_dim = dummy_output.reshape(-1).shape[0]
+        # Fully Connected Layers with Fewer Parameters
+        self.network = nn.Sequential(
+            nn.Linear(flatten_dim, 256),
+            nn.LayerNorm(256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
+            nn.LayerNorm(128),
+            nn.ReLU(),
+        )
+
+        # Final Layer
+        self.last_layer = nn.Linear(128, action_shape)
+
+    def forward(self, x):
+        # Input shape: (batch_size, C, H, W)
+        assert len(x.shape) == 4, "Input tensor must be 4D (batch_size, C, H, W)"
+        
+        # Pass through CNN
+        x = self.cnn(x)
+        x = self.adaptive_pool(x)
+        
+        # Flatten the features
+        x = x.reshape(x.size(0), -1)
+        
+        # Pass through Fully Connected Layers
+        x = self.network(x)
+        self.last_latent = x
+
+        # Output action values
+        return self.last_layer(x)
 
 

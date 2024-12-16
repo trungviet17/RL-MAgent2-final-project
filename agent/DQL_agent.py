@@ -1,9 +1,9 @@
-from base_agent import Agent
+from agent.base_agent import Agent
 from utils.exp_replay import ExperienceReplay
 from torch.optim import Adam
 import numpy as np 
 import torch 
-from model.networks import Pretrained_QNets
+from model.networks import Pretrained_QNets, MyQNetwork
 import torch.nn as nn 
 
 class DQLAgent(Agent):
@@ -86,3 +86,27 @@ class DQLAgent(Agent):
 
     def decay_epsilon(self):
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+
+
+
+class MyQAgent(Agent):
+    def __init__(self, n_observation, n_actions, model_path: str): 
+        super().__init__(n_observation, n_actions)
+        self.qnetwork = MyQNetwork(n_observation, n_actions)
+        self.n_action = n_actions
+        self.qnetwork.load_state_dict(
+            torch.load(model_path, weights_only=True, map_location="cpu")
+        ) 
+
+    def get_action(self, observation):
+        if np.random.rand() < 0.1:
+            return np.random.randint(self.n_action)
+        else:
+            observation = (
+                        torch.Tensor(observation).float().permute([2, 0, 1]).unsqueeze(0)
+                    )
+            with torch.no_grad():
+                q_values = self.qnetwork(observation)
+            action = torch.argmax(q_values, dim=1).numpy()[0]
+
+        return action
