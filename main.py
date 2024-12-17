@@ -101,7 +101,7 @@ class Inference:
             frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             out.write(frame_bgr)
         out.release()
-        print("Xong r m oi :>>>> ")
+        print("Xong !")
 
 
 
@@ -111,11 +111,11 @@ if __name__ == "__main__":
     n_actions = infer.env.action_space("red_0").n
     n_observation = infer.env.observation_space("red_0").shape
 
-    # agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/model3.pt')
-    agent1 = MyQAgent(n_observation,  n_actions, model_path= 'model/state_dict/my_model5.pt')
+    agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/my_pretrained3.pt')
+    # agent1 = MyQAgent(n_observation,  n_actions, model_path= 'model/state_dict/my_model5.pt')
     # agent2 = RandomAgent(n_observation, n_actions)
-    agent2 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/red.pt')
-    # agent1 = Final_Agent(n_observation,  n_actions, model_path= 'model/state_dict/red_final.pt')
+    # agent2 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/red.pt')
+    agent2 = Final_Agent(n_observation,  n_actions, model_path= 'model/state_dict/red_final.pt')
     # agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/model2.pt')
 
     infer.play(agent1, agent2)
