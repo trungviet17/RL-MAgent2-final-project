@@ -38,7 +38,7 @@ def eval():
     final_q_network.to(device)
 
     def my_policy(env, agent, obs):
-        my_agent = PretrainedAgent(env.observation_space("red_0").shape,  env.action_space("red_0").n, model_path= 'model/state_dict/model2.pt')
+        my_agent = PretrainedAgent(env.observation_space("red_0").shape,  env.action_space("red_0").n, model_path= 'model/state_dict/my_random5.pt')
         return my_agent.get_action(obs)
 
 
@@ -63,6 +63,8 @@ def eval():
         red_win, blue_win = [], []
         red_tot_rw, blue_tot_rw = [], []
         n_agent_each_team = len(env.env.action_spaces) // 2
+        blue_agents = []
+        red_agents = []
 
         for _ in tqdm(range(n_episode)):
             env.reset()
@@ -96,6 +98,9 @@ def eval():
             red_win.append(who_wins == "red")
             blue_win.append(who_wins == "blue")
 
+            blue_agents.append(n_kill["blue"])
+            red_agents.append(n_kill["red"])
+
             red_tot_rw.append(red_reward / n_agent_each_team)
             blue_tot_rw.append(blue_reward / n_agent_each_team)
 
@@ -104,31 +109,33 @@ def eval():
             "winrate_blue": np.mean(blue_win),
             "average_rewards_red": np.mean(red_tot_rw),
             "average_rewards_blue": np.mean(blue_tot_rw),
+            "red_kill": np.mean(red_agents) / n_agent_each_team,
+            "blue_kill": np.mean(blue_agents) / n_agent_each_team,
         }
 
-    # print("=" * 20)
-    # print("Eval with random policy")
-    # print(
-    #     run_eval(
-    #         env=env, red_policy=my_policy, blue_policy=random_policy, n_episode=30
-    #     )
-    # )
-    # print("=" * 20)
+    print("=" * 20)
+    print("Eval with random policy")
+    print(
+        run_eval(
+            env=env, red_policy=random_policy, blue_policy=my_policy, n_episode=30
+        )
+    )
+    print("=" * 20)
 
-    # print("Eval with trained policy")
-    # print(
-    #     run_eval(
-    #         env=env, red_policy=my_policy, blue_policy=pretrain_policy, n_episode=30
-    #     )
-    # )
+    print("Eval with trained policy")
+    print(
+        run_eval(
+            env=env, red_policy=pretrain_policy, blue_policy=my_policy, n_episode=30
+        )
+    )
     print("=" * 20)
 
     print("Eval with final trained policy")
     print(
         run_eval(
             env=env,
-            red_policy=my_policy,
-            blue_policy=final_pretrain_policy,
+            red_policy=final_pretrain_policy,
+            blue_policy=my_policy,
             n_episode=30,
         )
     )

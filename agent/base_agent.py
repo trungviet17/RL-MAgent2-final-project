@@ -60,7 +60,7 @@ class PretrainedAgent(Agent):
 
     def get_action(self, observation):
 
-        if np.random.rand() < 0.4:
+        if np.random.rand() < 0.05:
             return np.random.randint(self.n_action)
         else:
             observation = (

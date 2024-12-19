@@ -35,75 +35,32 @@ class Pretrained_QNets(nn.Module):
 
 
        
-class QMix_Nets(nn.Module): 
-    """"
-    Mạng QMix học hàm Q-total -> với thông tin của state và các q-value của hàm trước đó.  
-    Input: 
-        1. Thông tin về state -> state_dim : kích thước state  
-        2. Số lượng agent và hàm q max của agent đó  -> n_actions + số lượng agent 
-    => setting 2 tham số tương ứng với 2 đầu vào  
-    Output: 
-        1. Giá trị Q-total 
-    """
-
-    def __init__(self, state_shape, n_actions, num_agent,  embed_dim = 32, hyper_embed_dim = 128): 
-        super().__init__()
-
-        self.state_shape = state_shape
-        self.n_actions = n_actions
+class MixingNetwork(nn.Module):
+    def __init__(self, num_agents, embed_dim=32):
+        super(MixingNetwork, self).__init__()
+        self.num_agents = num_agents
+        self.hyper_w1 = nn.Linear(1, num_agents * embed_dim)
+        self.hyper_b1 = nn.Linear(1, embed_dim)
+        self.hyper_w2 = nn.Linear(1, embed_dim)
+        self.hyper_b2 = nn.Linear(1, 1)
         self.embed_dim = embed_dim
-        self.hyper_embed_dim = hyper_embed_dim
-        
-        # hyperparameter nhận đầu vào là kết quả từ từng GRU_QNets [num_agent, n_actions]
-        self.hyper_w1 = nn.Sequential(
-            nn.Linear(state_shape, hyper_embed_dim),
-            nn.ReLU(),
-            nn.Linear(hyper_embed_dim, num_agent * embed_dim)
-        )
 
-        self.hyper_w2 = nn.Sequential(
-            nn.Linear(state_shape, hyper_embed_dim),
-            nn.ReLU(),
-            nn.Linear(hyper_embed_dim, embed_dim)
-        )
-
-        self.hyper_b1 = nn.Linear(state_shape, embed_dim)
-        self.hyper_b2 = nn.Linear(state_shape, 1)
-
-        # dong vai tro la bias 
-        self.V = nn.Sequential(
-            nn.Linear(state_shape, embed_dim),
-            nn.ReLU(),
-            nn.Linear(embed_dim, 1)
-        )
-
-
-
-    def forward(self, agent_qs, state) :
-        """
-        Nhận đầu vào là một ma trận 
-        
-        Input: 
-
-
-        Output: 
-
-
-        
-        """
-        batch_size = state.size(0)
-
-        w1 = self.hyper_w1(state).view(batch_size, -1, self.embed_dim)
-        b1 = self.hyper_b1(state).view(batch_size, 1, self.embed_dim)
-
-        w2 = self.hyper_w2(state).view(batch_size, self.embed_dim, 1)
-        b2 = self.hyper_b2(state).view(batch_size, 1, 1)
-
-        hidden = torch.bmm(agent_qs, w1) + b1
-        hidden = F.relu(hidden)
-
-        q_total = torch.bmm(hidden, w2) + b2
+    def forward(self, agent_qs, state):
+        batch_size = agent_qs.size(0)
+        states = torch.ones((batch_size, 1)).to(agent_qs.device)  # Dummy state input for hypernet
+    
+        # Lấy weight và bias từ hyper-net
+        w1 = torch.abs(self.hyper_w1(states)).view(batch_size, self.num_agents, self.embed_dim)
+        b1 = self.hyper_b1(states).view(batch_size, 1, self.embed_dim)
+        w2 = torch.abs(self.hyper_w2(states)).view(batch_size, self.embed_dim, 1)
+        b2 = self.hyper_b2(states).view(batch_size, 1, 1)
+    
+        # Tính toán Mixing Network
+        hidden = torch.bmm(agent_qs.unsqueeze(1), w1) + b1  # Linear transformation
+        hidden = torch.relu(hidden)
+        q_total = torch.bmm(hidden, w2) + b2  # Output tổng Q-value
         return q_total.squeeze(-1)
+
     
 
 class Final_QNets(nn.Module):
