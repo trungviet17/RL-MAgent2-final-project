@@ -24,7 +24,7 @@ class Inference:
 
     def __init__(self, env_name: str,  save_dir: str):
         self.env = battle_v4.env(map_size=45, render_mode="rgb_array")
-        self.save_dir = 'video'
+        self.save_dir = save_dir
         os.makedirs(self.save_dir, exist_ok=True)
         self.fps = 35
 
@@ -102,17 +102,17 @@ class Inference:
 
 if __name__ == "__main__":
 
-    infer = Inference('battle_v4', 'video')
+    infer = Inference('battle_v4', 'assets/video')
     n_actions = infer.env.action_space("red_0").n
     n_observation = infer.env.observation_space("red_0").shape
 
-    agent1 = MyPretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/my_random5.pt')
+    agent1 = MyPretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/self_play.pt', nets_name = "pretrained")
     # agent1 = MyQAgent(n_observation,  n_actions, model_path= 'model/state_dict/my_model5.pt')
-    agent2 = RandomAgent(n_observation, n_actions)
-    # agent2 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/red.pt')
-    # agent2 = Final_Agent(n_observation,  n_actions, model_path= 'model/state_dict/red_final.pt')
+    # agent2 = RandomAgent(n_observation, n_actions)
+    # agent2 = PretrainedAgent(n_observation,  n_actions)
+    agent2 = Final_Agent(n_observation,  n_actions)
     # agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/model2.pt')
 
     infer.play(agent2, agent1)
-    infer.draw_video('myrandom_vs_random')
+    infer.draw_video('myrandom_vs_final')
 
