@@ -15,9 +15,9 @@ In this final project, you will develop and train a reinforcement learning (RL) 
 Your agent's performance should be evaluated based on reward and win rate against each of these models. You should control *blue* agents when evaluating.
 ```
 <p align="center">
-  <img src="assets/random.gif" width="300" alt="random agent" />
-  <img src="assets/pretrained.gif" width="300" alt="pretrained agent" />
-  <img src="assets/redselfplay.gif" width="300" alt="final agent" />
+  <img src="assets/random.gif" width="200" alt="random agent" />
+  <img src="assets/pretrained.gif" width="200" alt="pretrained agent" />
+  <img src="assets/redselfplay.gif" width="200" alt="final agent" />
 </p>
 
 
@@ -47,17 +47,17 @@ From the results, the Double Q-Learning algorithm proved to be significantly mor
 
 
 <p align="center">
-  <img src="assets/my_model_vs_random.gif" width="300" alt="my random vs random agent" />
-  <img src="assets/my_model_vs_pretrained.gif" width="300" alt="my random vs pretrained agent" />
-  <img src="assets/my_model_vs_final.gif" width="300" alt="my random vs final agent" />
+  <img src="assets/my_model_vs_random.gif" width="200" alt="my random vs random agent" />
+  <img src="assets/my_model_vs_pretrained.gif" width="200" alt="my random vs pretrained agent" />
+  <img src="assets/my_model_vs_final.gif" width="200" alt="my random vs final agent" />
 </p>
 
 2. The DDQN Agents ([checkpoint](model/state_dict/self_play.pt)) trained using self-play achieved the following results against Random, Pretrained Agent, and Final Agent (results shown from left to right): 
 
 <p align="center">
-  <img src="assets/self_play_vs_random.gif" width="300" alt="self play vs random agent" />
-  <img src="assets/self_play_vs_pretrained.gif" width="300" alt="self play vs pretrained agent" />
-  <img src="assets/self_play_vs_final.gif" width="300" alt="self play vs final agent" />
+  <img src="assets/self_play_vs_random.gif" width="200" alt="self play vs random agent" />
+  <img src="assets/self_play_vs_pretrained.gif" width="200" alt="self play vs pretrained agent" />
+  <img src="assets/self_play_vs_final.gif" width="200" alt="self play vs final agent" />
 </p>
 
 We ran the provided eval.py script using the DDQN Agents trained with Random, and obtained the following results:
