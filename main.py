@@ -3,7 +3,7 @@ import os
 import cv2
 from agent.base_agent import Agent, RandomAgent, PretrainedAgent, Final_Agent, MyPretrainedAgent
 import time
-
+import argparse
 """
 File code này dùng để chạy thử nghiệm các model đã được train sẵn trong ván chơi 
 
@@ -99,20 +99,47 @@ class Inference:
         print("Xong !")
 
 
+def init_agent(agent_name, n_observation, n_actions):
+    if agent_name == "random":
+        return RandomAgent(n_observation, n_actions)
+    elif agent_name == "pretrained":
+        return PretrainedAgent(n_observation, n_actions)
+    elif agent_name == "final":
+        return Final_Agent(n_observation, n_actions)
+    elif agent_name == "self_play":
+        return MyPretrainedAgent(n_observation, n_actions, model_path= 'model/state_dict/self_play.pt', nets_name = "pretrained")
+    elif agent_name == "my_random":
+        return MyPretrainedAgent(n_observation, n_actions, model_path= 'model/state_dict/my_model.pt', nets_name = "pretrained")
+    else:
+        raise ValueError("Invalid agent name")
+
+
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Demo games for 2 Agents")
+    parser.add_argument("-blue_agent", type=str, required=True, help="Name of blue agent")
+    parser.add_argument("-red_agent", type=str, required=True, help="Name of red agent")
+    parser.add_argument("-save_path", type=str, required=True, help="Path to save model")
+    args = parser.parse_args()
 
-    infer = Inference('battle_v4', 'assets/video')
+
+
+
+    infer = Inference('battle_v4', args.save_path)
     n_actions = infer.env.action_space("red_0").n
     n_observation = infer.env.observation_space("red_0").shape
 
-    agent1 = MyPretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/self_play.pt', nets_name = "pretrained")
+    agent1 = init_agent(args.red_agent, n_observation, n_actions)
+    agent2 = init_agent(args.blue_agent, n_observation, n_actions)
+
+
+    # agent1 = MyPretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/self_play.pt', nets_name = "pretrained")
     # agent1 = MyQAgent(n_observation,  n_actions, model_path= 'model/state_dict/my_model5.pt')
     # agent2 = RandomAgent(n_observation, n_actions)
     # agent2 = PretrainedAgent(n_observation,  n_actions)
-    agent2 = Final_Agent(n_observation,  n_actions)
+    # agent2 = Final_Agent(n_observation,  n_actions)
     # agent1 = PretrainedAgent(n_observation,  n_actions, model_path= 'model/state_dict/model2.pt')
 
-    infer.play(agent2, agent1)
-    infer.draw_video('myrandom_vs_final')
+    infer.play(agent1, agent2)
+    infer.draw_video('game')
 

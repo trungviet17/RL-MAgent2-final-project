@@ -3,6 +3,7 @@ from model.networks import Pretrained_QNets, Final_QNets
 from agent.base_agent import PretrainedAgent
 import torch
 import numpy as np
+import argparse
 
 try:
     from tqdm import tqdm
@@ -10,7 +11,7 @@ except ImportError:
     tqdm = lambda x, *args, **kwargs: x  # Fallback: tqdm becomes a no-op
 
 
-def eval():
+def eval(my_model_path):
     max_cycles = 300
     env = battle_v4.env(map_size=45, max_cycles=max_cycles)
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -38,7 +39,7 @@ def eval():
     final_q_network.to(device)
 
     def my_policy(env, agent, obs):
-        my_agent = PretrainedAgent(env.observation_space("red_0").shape,  env.action_space("red_0").n, model_path= 'model/state_dict/my_random5.pt')
+        my_agent = PretrainedAgent(env.observation_space("red_0").shape,  env.action_space("red_0").n, model_path= my_model_path)
         return my_agent.get_action(obs)
 
 
@@ -143,4 +144,9 @@ def eval():
 
 
 if __name__ == "__main__":
-    eval()
+    parser = argparse.ArgumentParser(description="Eval my Agent")
+    parser.add_argument("-model_path", type=str, required=True, help="Path to model")
+    args = parser.parse_args()
+
+
+    eval(args.model_path)

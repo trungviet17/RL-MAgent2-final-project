@@ -12,7 +12,7 @@ import os
 import torch 
 from torch.utils.data import DataLoader
 from time import time
-
+import argparse
 
 
 class Trainer : 
@@ -166,6 +166,13 @@ class Trainer :
 
 
 if __name__ == '__main__': 
+    parser = argparse.ArgumentParser(description="Train a Double Deep Q for MAgent")
+    parser.add_argument("-mode", type=str, required=True, help="self-play if you want to train with self-play, otherwise random")
+    parser.add_argument("-save_dir", type=str, required=True, help="Path to save model")
+    args = parser.parse_args()
+
+    is_self_play = args.is_self_play == "self-play"
+    save_dir = args.save_dir
 
     env = battle_v4.env(map_size=45, render_mode="rgb_array", attack_opponent_reward=0.5)
 
@@ -180,5 +187,7 @@ if __name__ == '__main__':
     red_agent = RandomAgent(action_shape)
     buffer = ReplayBuffer(capacity=10000)
 
-    trainer = Trainer(env, red_agent, blue_agent, buffer, batch_size = 64, is_self_play=False)
+    trainer = Trainer(env, red_agent, blue_agent, buffer, batch_size = 64, is_self_play=is_self_play)
     trainer.train(episodes = 70)
+
+    trainer.save_model(save_dir)
