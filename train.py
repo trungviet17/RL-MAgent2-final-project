@@ -3,82 +3,182 @@ File này dùng để training model
 
 """
 from .agent.base_agent import Agent, RandomAgent, PretrainedAgent
-from .agent.DQL_agent import DQLAgent
+from utils.memory import StateMemory, ReplayBuffer
+from agent.DQL_agent import DQNAgent
+from agent.Qmix_agent import QMIXAgent
+
 from magent2.environments import battle_v4
 import os 
 import torch 
+from torch.utils.data import DataLoader
+from time import time
 
 
 
+class Trainer : 
+    """
+    Sử dụng blue để huấn luyện 
+    
+    """
+    def __init__(self, env, red_agent: Agent, blue_agent:Agent, buffer, batch_size = 64, is_self_play = False): 
+        self.red_agent = red_agent
+        self.blue_agent = blue_agent
+        self.buffer = buffer 
+        self.batch_size = batch_size 
+        self.env = env 
+        self.is_self_play = is_self_play 
 
-class Trainer: 
+    def agent_give_action(self, name: str, observation):
+        if self.is_self_play : 
+            return  self.blue_agent.get_action(observation)
+        if name == "blue": 
+            return  self.blue_agent.get_action(observation)
+        return self.red_agent.get_action(observation)
 
-    def __init__(self, render_mode):
 
-        self.env = battle_v4.env(map_size=45, render_mode=render_mode)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    def update_memory(self, is_longterm: bool = False): 
+        """
+        Tạo ra một vòng lặp lưu trữ và cập nhật dữ liệu cho từng agent 
+        """
+        self.env.reset()
+        prev_obs = {}
+        prev_actions = {}
+        red_reward = 0 
+        blue_reward = 0 
+
+        prev_team = "red"
+
+        n_kills = {"red": 0, "blue": 0}
+        # vong lap 1 
+        for idx, agent in enumerate(self.env.agent_iter()): 
+            prev_ob, reward, termination, truncation, _ = self.env.last()
+            team = agent.split("_")[0]
+            n_kills[team] += (reward > 4.5)
+
+            if truncation or termination: 
+                prev_action = None
+            else: 
+                if agent.split("_")[0] == "red": 
+                    prev_action =  self.agent_give_action("red", prev_ob)
+                    red_reward += reward
+                else: 
+                    prev_action = self.agent_give_action("blue", prev_ob)
+                    blue_reward += reward 
     
 
-
-    def train_dpn(self, episodes: int, target_update_freq: int, red_agent: DQLAgent, blue_agent: Agent) : 
-
-        total_rewards = []
-
-        for episode in range(episodes):
-            self.env.reset()
-            ep_reward = 0
-
-            for agent in self.env.agent_iter():
-                observation, reward, termination, truncation, info = self.env.last()
-
-                if termination or truncation:
-                    action = None
-                else:
-                    agent_handle = agent.split("_")[0]
-                    if agent_handle == "red":
-                        action = red_agent.get_action(observation)
-                    else:
-                        action = blue_agent.get_action(observation)
-
-                self.env.step(action)
-                ep_reward += reward
-
-                if agent == 'red_0':
-                    red_agent.buffer.push(observation, action, reward, 
-                                          self.env.last()[0], termination or truncation)
-                    
-                    ep_reward += reward
-
-                red_agent.train()
-
-                if episode % target_update_freq == 0:
-                    red_agent.update_target_network()
-
-            total_rewards.append(ep_reward)
-            print(f"Episode {episode}, Total Reward: {ep_reward}, Epsilon: {red_agent.epsilon:.2f}")
-
-        self.save(red_agent.qnetwork, "/home/trung/workspace/final-project-RL/model/state_dict/dqn.pt")
-        self.env.close()
-                    
-
-
-    def save_model(model, file_path):
-        torch.save(model.state_dict(), file_path)
-        print(f"Model saved to {file_path}")
         
+            prev_obs[agent] = prev_ob 
+            prev_actions[agent] = prev_action 
+            self.env.step(prev_action)
 
-    def plot_reward(self):
-        pass
+            if (idx + 1) % self.env.num_agents == 0: break 
+
+        # vong lap 2 
+        for agent in self.env.agent_iter(): 
+
+            obs, reward, termination, truncation, _ = self.env.last()
+            team = agent.split("_")[0]
+            n_kills[team] += (reward > 4.5)
+            
+            if truncation or termination: 
+                action = None 
+            else: 
+                if agent.split("_")[0] == "red" : 
+                    action = self.agent_give_action("red", obs)
+                    red_reward += reward 
+                
+                else: 
+                    action = self.agent_give_action("blue", obs)
+                    blue_reward += reward
+                
+
+            self.env.step(action)
+            if isinstance(self.buffer, StateMemory):
+                if team != prev_team : 
+                    self.buffer.ensemble()  
+                    prev_team = team
+                idx = int(agent.split("_")[1]) % self.buffer.grouped_agents
+                self.buffer.push(
+                    idx,
+                    prev_obs[agent], 
+                    prev_actions[agent], 
+                    reward, 
+                    obs, 
+                    termination 
+                )
+            else: 
+                 self.buffer.push(
+                    prev_obs[agent], 
+                    prev_actions[agent], 
+                    reward, 
+                    obs, 
+                    termination 
+                )
+
+            prev_obs[agent] = obs 
+            prev_actions[agent] = action
+
+        return  blue_reward - red_reward,  n_kills, blue_reward # red thắng  
+
+
+    def save_model (self, file_path):
+        
+        torch.save(self.blue_agent.q_net.state_dict(), file_path)
+        print(f"Model saved to {file_path}")
+    
+    def train(self, episodes=500, target_update_freq=2, is_type = "dqn"):
+        gap_rewards = []
+
+
+        for eps in range(episodes): 
+            start = time()
+            gap_reward, n_kills, blue_reward = self.update_memory()
+
+            
+            if is_type == "qmix": 
+                self.buffer.ensemble()
+            
+            dataloader = DataLoader(self.buffer, batch_size = self.batch_size, shuffle = True)
+            # print(f"Out of dataloader {len(self.buffer)}")
+            self.blue_agent.train(dataloader)
+            
+            self.blue_agent.decay_epsilon()
+            if eps % target_update_freq == 0:
+                self.blue_agent.update_target_network()
+    
+            end = time() - start 
+            
+            # wandb.log({
+            #     "episode": eps,
+            #     "gap_rewards": gap_reward,
+            #     "epsilon": self.blue_agent.epsilon,
+            #     "time": end,
+            #     "red_kill": n_kills["red"], 
+            #     "blue_kill": n_kills["blue"]
+            # })
+    
+            
+            gap_rewards.append(gap_reward)
+            print(f"Episode {eps}, Gap Reward: {gap_reward}, Total Reward: {blue_reward}, Epsilon: {self.blue_agent.epsilon:.2f}, Time: {end}, Kill: {n_kills}")
+    
+        self.env.close()
 
 
 if __name__ == '__main__': 
 
-    trainer = Trainer(render_mode='rgb_array', save_dir='video')
+    env = battle_v4.env(map_size=45, render_mode="rgb_array", attack_opponent_reward=0.5)
 
-    observation_shape = trainer.env.observation_space("red_0").shape
-    action_shape = trainer.env.action_space("red_0").n
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    red_agent = DQLAgent(observation_shape, action_shape, device=trainer.device)
-    blue_agent = PretrainedAgent(observation_shape, action_shape, device=trainer.device)
+    observation_shape = env.observation_space("red_0").shape
+    action_shape = env.action_space("red_0").n
+    num_agents = 27
 
-    trainer.train_dpn(1000, 10, red_agent, blue_agent)
+    blue_agent = DQNAgent(observation_shape,action_shape, device=device)
+
+    red_agent = RandomAgent(action_shape)
+    buffer = ReplayBuffer(capacity=10000)
+
+    trainer = Trainer(env, red_agent, blue_agent, buffer, batch_size = 64, is_self_play=False)
+    trainer.train(episodes = 70)

@@ -1,38 +1,27 @@
 from agent.base_agent import Agent
-from utils.exp_replay import ExperienceReplay
-from torch.optim import Adam
 import numpy as np 
 import torch 
-from model.networks import Pretrained_QNets, MyQNetwork
+from model.networks import PretrainedQNetwork
 import torch.nn as nn 
+import torch.optim as optim
 
-class DQLAgent(Agent):
+class DQNAgent(Agent):
+    def __init__(self, observation_shape, action_shape, batch_size=64, lr=1e-3, gamma=0.6, device="cpu"):
+        self.device = torch.device(device)
+        self.q_net = PretrainedQNetwork(observation_shape, action_shape).float().to(self.device)
+        self.target_net = PretrainedQNetwork(observation_shape, action_shape).float().to(self.device)
+        self.target_net.load_state_dict(self.q_net.state_dict())
+        self.target_net.eval()
 
-    def __init__(self, n_observation, n_actions, buffer_size, batch_size, gamma, lr, target_update_freq):
-        super().__init__(n_observation, n_actions)
-
-        self.qnetwork = Pretrained_QNets(n_observation, n_actions)
-        self.target_qnetwork = Pretrained_QNets(n_observation, n_actions)
-        self.target_qnetwork.load_state_dict(self.qnetwork.state_dict())
-        self.target_qnetwork.eval()
-
-
-        self.buffer = ExperienceReplay(buffer_size)
-        self.optimizer = Adam(self.qnetwork.parameters(), lr=lr)
-        self.loss_fn = nn.MSELoss()
-
+        self.optimizer = optim.Adam(self.q_net.parameters(), lr=lr)
         self.batch_size = batch_size
         self.gamma = gamma
-        self.lr = lr
-        self.target_update_freq = target_update_freq
-
-
-        # epsilon decay 
+        self.action_shape = action_shape
         self.epsilon = 1.0
-        self.epsilon_decay = 0.995
-        self.epsilon_min = 0.05 
-
-
+        self.epsilon_decay = 0.97
+        self.epsilon_min = 0.05
+        self.loss_fn = nn.MSELoss()
+    
 
     def get_action(self, observation):
         if np.random.rand() < self.epsilon:
@@ -40,46 +29,33 @@ class DQLAgent(Agent):
         else:
             state_tensor = torch.FloatTensor(observation).unsqueeze(0).permute(0, 3, 1, 2).to(self.device)
             with torch.no_grad():
-                return self.qnetwork(state_tensor).argmax().item()
+                return self.q_net(state_tensor).argmax().item()
 
-
-    def train(self):
+    def train(self, dataloader):
         """
-        training the agent 
+            cap nhat lai tham so mo hinh voi input dau vao 
         """
-
-        if len(self.buffer) < self.batch_size:
-            return
-
-        states, actions, rewards, next_states, dones = self.buffer.sample(self.batch_size)
-
-        valid_indices = [i for i in range(len(actions)) if actions[i] is not None]
-        if not valid_indices:  
-            return
-
-        states = np.array([states[i] for i in valid_indices])
-        actions = np.array([actions[i] for i in valid_indices])
-        rewards = np.array([rewards[i] for i in valid_indices])
-        next_states = np.array([next_states[i] for i in valid_indices])
-        dones = np.array([dones[i] for i in valid_indices])
-
-        states = torch.FloatTensor(states).permute(0, 3, 1, 2).to(self.device)
-        next_states = torch.FloatTensor(next_states).permute(0, 3, 1, 2).to(self.device)
-        actions = torch.tensor(actions).unsqueeze(1).to(self.device)
-        rewards = torch.FloatTensor(rewards).unsqueeze(1).to(self.device)
-        dones = torch.FloatTensor(dones).unsqueeze(1).to(self.device)
-
-
-        q_values = self.qnetwork(states).gather(1, actions)
-        with torch.no_grad():
-            next_q_values = self.target_qnetwork(next_states).max(1, keepdim=True)[0]
-            target_q_values = rewards + self.gamma * next_q_values * (1 - dones)
-
-        # t8nh loss
-        loss = self.loss_fn(q_values, target_q_values)
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+        self.q_net.train()
+        for obs, action, reward, next_obs, done in dataloader: 
+            self.q_net.zero_grad()
+    
+            obs = obs.permute(0, 3, 1, 2).to(self.device) 
+            action = action.unsqueeze(1).to(self.device)
+            reward = reward.unsqueeze(1).to(self.device)
+            next_obs = next_obs.to(self.device)
+            next_obs = next_obs.permute(0, 3, 1, 2).to(self.device)
+            done = done.unsqueeze(1).to(self.device)
+    
+            # cap nhat gia tri q 
+            with torch.no_grad(): 
+                target_q_values = reward + self.gamma * (1 - done) * self.target_net(next_obs).max(1, keepdim=True)[0]
+    
+            q_values = self.q_net(obs).gather(1, action)
+    
+            loss = self.loss_fn(q_values, target_q_values)
+            loss.backward()
+            self.optimizer.step()
+       
 
     def update_target_network(self):
         self.target_net.load_state_dict(self.q_net.state_dict())
@@ -88,25 +64,3 @@ class DQLAgent(Agent):
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
 
-
-class MyQAgent(Agent):
-    def __init__(self, n_observation, n_actions, model_path: str): 
-        super().__init__(n_observation, n_actions)
-        self.qnetwork = MyQNetwork(n_observation, n_actions)
-        self.n_action = n_actions
-        self.qnetwork.load_state_dict(
-            torch.load(model_path, weights_only=True, map_location="cpu")
-        ) 
-
-    def get_action(self, observation):
-        if np.random.rand() < 0.1:
-            return np.random.randint(self.n_action)
-        else:
-            observation = (
-                        torch.Tensor(observation).float().permute([2, 0, 1]).unsqueeze(0)
-                    )
-            with torch.no_grad():
-                q_values = self.qnetwork(observation)
-            action = torch.argmax(q_values, dim=1).numpy()[0]
-
-        return action
