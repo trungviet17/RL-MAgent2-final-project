@@ -79,7 +79,7 @@ pip install -r requirements.txt
 Secondly, if you want to retrain the Double Deep Q results for both random and self-play, use the following command:
 
 ```
-python main.py -mode=<self-play or random> -save_dir=<path to save model cpt>
+python train.py -mode=<self-play or random> -save_dir=<path to save model cpt>
 ```
 
 If you want to run the evaluation code using our pre-trained model checkpoints, execute the following command (we provide pre-trained models for [random](model/state_dict/my_random.pt) and [self-play](model/state_dict/self_play.pt) ): 
