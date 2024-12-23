@@ -24,7 +24,7 @@ Your agent's performance should be evaluated based on reward and win rate agains
 ## Our methods
 To address the problem, we implemented and experimented with the following three algorithms:
 
-1. ** Deep Q Learning** : We experimented with training using random and self-play (**the best results**). Since each agent observes only a matrix of size (13x13x5), we used a single Q-network that learns from the data of both the red and blue agents. Results showed that the algorithm converges quite quickly; after 70 training episodes, it was able to completely defeat the three agents used for evaluation. Furthermore, the training results for random and self-play were nearly identical. 
+1. **Deep Q Learning** : We experimented with training using random and self-play (**the best results**). Since each agent observes only a matrix of size (13x13x5), we used a single Q-network that learns from the data of both the red and blue agents. Results showed that the algorithm converges quite quickly; after 70 training episodes, it was able to completely defeat the three agents used for evaluation. Furthermore, the training results for random and self-play were nearly identical. 
 
 2. **QMix**: We experimented with training using a random agent. Results showed that the algorithm did not perform well and failed to improve after 30 episodes. We used a single Q_a network to learn for all agents, based on data from both the blue and red agents. Additionally, we experimented with grouping agents into 9, 27, and 81 clusters instead of using the entire observation space of 81 agents for the QMix network. However, the algorithm's results remained poor and showed no improvement.
 
