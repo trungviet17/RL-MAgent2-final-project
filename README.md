@@ -24,7 +24,7 @@ Your agent's performance should be evaluated based on reward and win rate agains
 ## Our methods
 To address the problem, we implemented and experimented with the following three algorithms:
 
-1. **Double Deep Q Learning** : We experimented with training using random and self-play (**the best results**). Since each agent observes only a matrix of size (13x13x5), we used a single Q-network that learns from the data of both the red and blue agents. Results showed that the algorithm converges quite quickly; after 70 training episodes, it was able to completely defeat the three agents used for evaluation. Furthermore, the training results for random and self-play were nearly identical. 
+1. ** Deep Q Learning** : We experimented with training using random and self-play (**the best results**). Since each agent observes only a matrix of size (13x13x5), we used a single Q-network that learns from the data of both the red and blue agents. Results showed that the algorithm converges quite quickly; after 70 training episodes, it was able to completely defeat the three agents used for evaluation. Furthermore, the training results for random and self-play were nearly identical. 
 
 2. **QMix**: We experimented with training using a random agent. Results showed that the algorithm did not perform well and failed to improve after 30 episodes. We used a single Q_a network to learn for all agents, based on data from both the blue and red agents. Additionally, we experimented with grouping agents into 9, 27, and 81 clusters instead of using the entire observation space of 81 agents for the QMix network. However, the algorithm's results remained poor and showed no improvement.
 
@@ -41,9 +41,9 @@ During the training process, we logged several metrics to evaluate the effective
   <img src="assets/doc/wandb.png" width="800" alt="evaluation metrics" /> 
 </p>
 
-From the results, the Double Q-Learning algorithm proved to be significantly more effective than the other two methods. We also experimented with this algorithm under three settings: using a network with the same architecture as the published pretrained model, a custom-designed network, and self-play. The results were nearly identical across all settings. Below are some experimental results when our trained agent was tested against 3 agents used for evaluation
+From the results, the   Q-Learning algorithm proved to be significantly more effective than the other two methods. We also experimented with this algorithm under three settings: using a network with the same architecture as the published pretrained model, a custom-designed network, and self-play. The results were nearly identical across all settings. Below are some experimental results when our trained agent was tested against 3 agents used for evaluation
 
-1. The DDQN Agents ([checkpoint](model/state_dict/my_random5.pt)) trained with Random achieved the following results against Random, Pretrained Agent, and Final Agent (results shown from left to right): 
+1. The DQN Agents ([checkpoint](model/state_dict/my_random5.pt)) trained with Random achieved the following results against Random, Pretrained Agent, and Final Agent (results shown from left to right): 
 
 
 <p align="center">
@@ -52,7 +52,7 @@ From the results, the Double Q-Learning algorithm proved to be significantly mor
   <img src="assets/my_model_vs_final.gif" width="200" alt="my random vs final agent" />
 </p>
 
-2. The DDQN Agents ([checkpoint](model/state_dict/self_play.pt)) trained using self-play achieved the following results against Random, Pretrained Agent, and Final Agent (results shown from left to right): 
+2. The DQN Agents ([checkpoint](model/state_dict/self_play.pt)) trained using self-play achieved the following results against Random, Pretrained Agent, and Final Agent (results shown from left to right): 
 
 <p align="center">
   <img src="assets/self_play_vs_random.gif" width="200" alt="self play vs random agent" />
@@ -60,7 +60,7 @@ From the results, the Double Q-Learning algorithm proved to be significantly mor
   <img src="assets/self_play_vs_final.gif" width="200" alt="self play vs final agent" />
 </p>
 
-We ran the provided eval.py script using the DDQN Agents trained with Random, and obtained the following results:
+We ran the provided eval.py script using the  DQN Agents trained with Random, and obtained the following results:
 
 <p align="center"> 
   <img src="assets/doc/result.png" width="900" alt="evaluation" /> 
@@ -76,7 +76,7 @@ First, you should clone this repo and install with or you only need to download 
 pip install -r requirements.txt
 ```
 
-Secondly, if you want to retrain the Double Deep Q results for both random and self-play, use the following command:
+Secondly, if you want to retrain the  Deep Q results for both random and self-play, use the following command:
 
 ```
 python train.py -mode=<self-play or random> -save_dir=<path to save model cpt>
